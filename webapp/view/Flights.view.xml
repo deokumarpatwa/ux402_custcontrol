@@ -4,7 +4,7 @@
     displayBlock="true"
     xmlns="sap.m"
     xmlns:l="sap.ui.layout"
-    xmlns:cust="student18.com.sap.training.ux402.fullscreen.ux402fullscreen.control"
+    xmlns:cust="student18.com.sap.training.ux402.controls"
 >
     <Page
         id="idFlightsPage"
