@@ -3,8 +3,9 @@ sap.ui.define([
     "student18/com/sap/training/ux402/controls/HoverButton",
     "sap/m/MessageToast",
     "student18/com/sap/training/ux402/controls/PlaneInfo",
+    "sap/m/MessageBox"
 ],
-    function (Controller, HoverButton, MessageToast, PlaneInfo) {
+    function (Controller, HoverButton, MessageToast, PlaneInfo, MessageBox) {
         "use strict";
 
         return Controller.extend("student18.com.sap.training.ux402.fullscreen.ux402fullscreen.controller.Flights", {
@@ -61,6 +62,62 @@ sap.ui.define([
                 MessageToast.show(evt.getSource().getHoverText() + " " + sText, {
                     duration: 1000
                 });
+            },
+
+            onHoverPress: function (oEvent) {
+                var carrid = oEvent.getSource().data("id");
+                var fldate = oEvent.getSource().data("date");
+                var connid = oEvent.getSource().data("connid");
+
+                MessageBox.confirm("Are you sure want to book this flight?", function (oAction) {
+                    if (sap.m.MessageBox.Action.OK === oAction) {
+                        var oEntry = {};
+                        oEntry.Carrid = carrid;
+                        oEntry.Connid = connid;
+                        oEntry.Fldate = fldate;
+                        oEntry.Counter = "1";
+                        oEntry.Bookid = "43535432";
+                        oEntry.Customid = "00004306";
+                        oEntry.Passname = "John Doe";
+
+                        var oModel = this.getOwnerComponent().getModel();
+                        var customerHeader = { "Content-Type": "application/json" };
+                        oModel.setHeaders(customerHeader);
+
+                        var that = this;
+                        Promise.all([this._createBookingEntry(oModel, oEntry)
+                        ]).then(that._handleBookingSuccess,
+                            that._handleBookingError);
+
+                    }
+                }.bind(this));
+
+            },
+
+            _createBookingEntry: function (oModel, oEntry) {
+                return new Promise(
+                    function (resolve, reject) {
+                        oModel.create("/UX_C_Booking_TP", oEntry, {
+                            success: function (oData, response) {
+                                resolve(oData.Bookid, response);
+                            },
+                            error: function (oError) {
+                                reject(oError);
+                            }
+                        });
+                    }
+                );
+            },
+            _handleBookingSuccess: function (bookId, response) {
+                MessageBox.alert("Flight booked. Booking reference number is: " + bookId);
+            },
+            _handleBookingError: function (oError) {
+                if (oError) {
+                    if (oError.responseText) {
+                        var oErrorMessage = JSON.parse(oError.responseText);
+                        MessageBox.alert("Flight was not booked due to: " + oErrorMessage.error.message.value);
+                    }
+                }
             }
         });
     });
